@@ -143,7 +143,7 @@ class untis():
         #self.wednsday = self.monday + datetime.timedelta(days=2)
         #self.thursday = self.monday + datetime.timedelta(days=3)
 
-        self.wednsday = datetime.date(2021, 12, 15)
+        self.wednsday = datetime.date(2021, 11, 24)
         self.thursday = datetime.date(2021, 12, 16)
 
         wedTT = str(self.s.timetable(klasse=klasse, start=self.wednsday, end=self.wednsday))
@@ -216,7 +216,7 @@ class untis():
             elif time == '1205':
                 self._processTable(str(day), '1205', i, temp)
             elif time == '1300':
-                self._processTable(str(day), '1250', i, temp)
+                self._processTable(str(day), '1300', i, temp)
             elif time == '1350':
                 self._processTable(str(day), '1350', i, temp)
             elif time == '1435':
@@ -236,12 +236,16 @@ class untis():
             jsonData = json.load(ed)
             
             for key in iList[1].keys():
+                #print(key)
                 # Get the Data to put in the export Table
                 #print(self.fetchedWednsday[key])
                 try:
                     self.teacher     = iList[1][key][self.teacher][0]["id"]
                     self.subject     = self._getSubject(iList[1][key][self.subject][0]["id"])
                     self.room        = self._getRoom(iList[1][key][self.rooms][0]["id"])
+                    print(self.room)
+                    print(self.subject)
+                    print(self.teacher)
                 except:
                     #print(key + " empty")
                     pass
@@ -249,7 +253,7 @@ class untis():
                 try:
                     # Get the Code to put in the export Table
                     self.code        = iList[1][key]['code']
-                    #print(self.code)
+                    #print(iList[1][key])
 
                     # Assigning the Data to the template used to create the exportable table
                     if iList[0] == 'wednsday':
@@ -267,6 +271,7 @@ class untis():
                         jsonData[1][key]["room"]    = self.room
 
                 except:
+                    #print(iList[1][key])
                     self.code = 'none'
                     if iList[0] == 'wednsday':
                         jsonData[0]["date"]    = int(str(self.wednsday).replace("-", ""))
@@ -286,7 +291,6 @@ class untis():
                     pass
         with open("templates\exportData.json", 'w') as ed:
             json.dump(jsonData, ed)
-            print(jsonData)
 
     def _refreshHeader(self):
         self.header=dict(values=self.headerData,
