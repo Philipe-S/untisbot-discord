@@ -14,4 +14,4 @@ After I am done soft coding my plan is to add other features such as other expor
 
 ## Why Python?
 You may be asking yourself why I am using Python. There is a quite simple answer: It's the Language I have the most knowledge in and I like the language.
-I know there may be a better way to do this but therefor I would have to learn a whole new language (I want to stick to learning one for now).
+I know there may be a better way to do this but therefore I would have to learn a whole new language (I want to stick to learning one for now).
