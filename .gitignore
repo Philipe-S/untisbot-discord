@@ -171,3 +171,9 @@ templates/timetableWed.json
 3.7.3
 test.py
 templates/timetableWed.json
+.vscode/settings.json
+temp/wedTimetable.json
+temp/
+notes.txt
+db/data.sqlite3
+temp/wedTimetable.json
