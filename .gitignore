@@ -174,3 +174,5 @@ templates/timetableWed.json
 .vscode/settings.json
 temp/wedTimetable.json
 temp/
+notes.txt
+db/data.sqlite3
