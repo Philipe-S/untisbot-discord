@@ -25,10 +25,10 @@ class untis():
         self.darkOrange = 'rgb(199, 131, 32)'
         
         # For better understanding in usage
-        self.teacher = "te"
-        self.klasse = "kl"
-        self.subject = "su"
-        self.room = "ro"
+        self.te = 'te'
+        self.kl = 'kl'
+        self.su = 'su'
+        self.ro = 'ro'
 
         # Data for the Output Timetable
         self.headerData = ['Stunde', 'Mittwoch', 'Donnerstag']
@@ -230,7 +230,7 @@ class untis():
                 pass
         #print(self.tempWednsday)
 
-    def _iterateTT(self, iList): # iList has to bis format: ['weekday', {*timetable data*}]
+    def _iterateTT(self, iList): # iList has to be this format: ['weekday', {*timetable data*}]
         # Will get properly soft-coded later --> Be able to use the bot with any schooldays
         with open("templates\exportData.json") as ed:
             jsonData = json.load(ed)
@@ -240,12 +240,10 @@ class untis():
                 # Get the Data to put in the export Table
                 #print(self.fetchedWednsday[key])
                 try:
-                    self.teacher     = iList[1][key][self.teacher][0]["id"]
-                    self.subject     = self._getSubject(iList[1][key][self.subject][0]["id"])
-                    self.room        = self._getRoom(iList[1][key][self.rooms][0]["id"])
-                    print(self.room)
-                    print(self.subject)
-                    print(self.teacher)
+                    
+                    self.teacher     = iList[1][key][self.te][0]["id"]
+                    self.subject     = self._getSubject(iList[1][key][self.su][0]["id"])
+                    self.room        = self._getRoom(iList[1][key][self.ro][0]["id"])
                 except:
                     #print(key + " empty")
                     pass
@@ -258,37 +256,37 @@ class untis():
                     # Assigning the Data to the template used to create the exportable table
                     if iList[0] == 'wednsday':
                         jsonData[0]["date"]    = int(str(self.wednsday).replace("-", ""))
-                        jsonData[0][key]["code"]    = self.code
-                        jsonData[0][key]["teacher"] = self.teacher
-                        jsonData[0][key]["subject"] = self.subject
-                        jsonData[0][key]["room"]    = self.room
+                        jsonData[0][key]["teacher"] = int(self.teacher)
+                        jsonData[0][key]["code"]    = str(self.code)
+                        jsonData[0][key]["subject"] = str(self.subject)
+                        jsonData[0][key]["room"]    = str(self.room)
 
                     elif iList[0] == 'thursday':
                         jsonData[1]["date"]    = int(str(self.thursday).replace("-", ""))
-                        jsonData[1][key]["code"]    = self.code
-                        jsonData[1][key]["teacher"] = self.teacher
-                        jsonData[1][key]["subject"] = self.subject
-                        jsonData[1][key]["room"]    = self.room
+                        jsonData[1][key]["teacher"] = int(self.teacher)
+                        jsonData[1][key]["code"]    = str(self.code)
+                        jsonData[1][key]["subject"] = str(self.subject)
+                        jsonData[1][key]["room"]    = str(self.room)
 
                 except:
                     #print(iList[1][key])
                     self.code = 'none'
                     if iList[0] == 'wednsday':
                         jsonData[0]["date"]    = int(str(self.wednsday).replace("-", ""))
-                        jsonData[0][key]["code"]    = self.code
-                        jsonData[0][key]["teacher"] = self.teacher
-                        jsonData[0][key]["subject"] = self.subject
-                        jsonData[0][key]["room"]    = self.room
+                        jsonData[0][key]["teacher"] = int(self.teacher)
+                        jsonData[0][key]["code"]    = str(self.code)
+                        jsonData[0][key]["subject"] = str(self.subject)
+                        jsonData[0][key]["room"]    = str(self.room)
 
                     elif iList[0] == 'thursday':
                         jsonData[1]["date"]    = int(str(self.thursday).replace("-", ""))
-                        jsonData[1][key]["code"]    = self.code
-                        jsonData[1][key]["teacher"] = self.teacher
-                        jsonData[1][key]["subject"] = self.subject
-                        jsonData[1][key]["room"]    = self.room
+                        jsonData[1][key]["teacher"] = int(self.teacher)
+                        jsonData[1][key]["code"]    = str(self.code)
+                        jsonData[1][key]["subject"] = str(self.subject)
+                        jsonData[1][key]["room"]    = str(self.room)
 
-                    jsonData[0]
-                    pass
+            print(jsonData)
+                    
         with open("templates\exportData.json", 'w') as ed:
             json.dump(jsonData, ed)
 
@@ -316,12 +314,13 @@ class untis():
         pass
 
     def _getRoom(self, roomId):
-        room = self.s.rooms().filter(id=roomId)
+        room = str(self.s.rooms().filter(id=roomId)).replace("[", "").replace("]", "")
         #print(room)
         return room
 
     def _getSubject(self, subId):
-        subject = self.s.subjects().filter(id=subId)
+        subject = str(self.s.subjects().filter(id=subId)).replace("[", "").replace("]", "")
+        #print(subject)
         return subject
 
     def _getTeacher(self, teacherId):
