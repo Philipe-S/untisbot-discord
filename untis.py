@@ -23,7 +23,7 @@ class untis():
         self.purple = 'rgb(189, 163, 199)'
         self.orange = 'rgb(243, 184, 98)'
         self.darkOrange = 'rgb(199, 131, 32)'
-        
+
         # For better understanding in usage
         self.te = 'te'
         self.kl = 'kl'
@@ -45,8 +45,28 @@ class untis():
                             self.darkOrange,
                             self.darkOrange,
                             self.darkOrange]
-        self.fill_secCol    = []
-        self.fill_thirCol   = []
+        self.fill_secCol    = [self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange]
+        self.fill_thirCol   = [self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange,
+                            self.orange]
 
         self.code       = ''
         self.teacher    = ''
@@ -117,6 +137,10 @@ class untis():
 
     # ---- Initial Setup end ----
 
+
+
+
+
     def login(self):
         try:
             print('Attemting login...')
@@ -140,11 +164,11 @@ class untis():
         except:
             pass
         klasse = self.s.klassen().filter(id=1144)[0]
-        #self.wednsday = self.monday + datetime.timedelta(days=2)
-        #self.thursday = self.monday + datetime.timedelta(days=3)
+        self.wednsday = self.monday + datetime.timedelta(days=2)
+        self.thursday = self.monday + datetime.timedelta(days=3)
 
-        self.wednsday = datetime.date(2021, 11, 24)
-        self.thursday = datetime.date(2021, 12, 16)
+        #self.wednsday = datetime.date(2021, 11, 24)
+        #self.thursday = datetime.date(2021, 12, 16)
 
         wedTT = str(self.s.timetable(klasse=klasse, start=self.wednsday, end=self.wednsday))
         wedTT = wedTT.replace("'", "\"")
@@ -178,7 +202,7 @@ class untis():
         fi2.close()
         self._sortLessons('thursday', list2, False)
         #print(list2)
-    
+
     def _processTable(self, day, time, data, temp):
         if temp == True:
             if day == 'wednsday':
@@ -234,13 +258,13 @@ class untis():
         # Will get properly soft-coded later --> Be able to use the bot with any schooldays
         with open("templates\exportData.json") as ed:
             jsonData = json.load(ed)
-            
+
             for key in iList[1].keys():
                 #print(key)
                 # Get the Data to put in the export Table
                 #print(self.fetchedWednsday[key])
                 try:
-                    
+
                     self.teacher     = iList[1][key][self.te][0]["id"]
                     self.subject     = self._getSubject(iList[1][key][self.su][0]["id"])
                     self.room        = self._getRoom(iList[1][key][self.ro][0]["id"])
@@ -273,7 +297,10 @@ class untis():
                     self.code = 'none'
                     if iList[0] == 'wednsday':
                         jsonData[0]["date"]    = int(str(self.wednsday).replace("-", ""))
-                        jsonData[0][key]["teacher"] = int(self.teacher)
+                        try:
+                            jsonData[0][key]["teacher"] = int(self.teacher)
+                        except:
+                            pass
                         jsonData[0][key]["code"]    = str(self.code)
                         jsonData[0][key]["subject"] = str(self.subject)
                         jsonData[0][key]["room"]    = str(self.room)
@@ -285,8 +312,8 @@ class untis():
                         jsonData[1][key]["subject"] = str(self.subject)
                         jsonData[1][key]["room"]    = str(self.room)
 
-            print(jsonData)
-                    
+            #print(jsonData)
+
         with open("templates\exportData.json", 'w') as ed:
             json.dump(jsonData, ed)
 
@@ -305,13 +332,88 @@ class untis():
         self.table = go.Figure(data=[go.Table(
             columnorder=[1,2,3],
             columnwidth=[10,45,45],
-            
+
             header=self.header,
             cells=self.cells
         )])
 
-    def _updateTable(self):
-        pass
+    def _updateTable(self, day):
+        # This part is going through the sorted Data from the WebUntis API and changing the table colors
+        # 
+        with open("templates\exportData.json", 'r') as ed:
+            jsonData = json.load(ed)
+
+
+            if day == 'wednsday':
+                data = jsonData[0]
+
+                for key in data:
+                    if key == "date":
+                        pass
+                    else:
+                        lesson = self._translateTime(key) - 1
+                        print(lesson)
+                        if data[key]['code'] == 'cancelled':
+                            self.fill_secCol[lesson] = self.red
+                        elif data[key]['code'] == "irregular":
+                            self.fill_secCol[lesson] = self.purple
+                        elif data[key]['code'] == "none":
+                            self.fill_secCol[lesson] = self.orange
+                        else:
+                            print("Error at _updateTable")
+                    #print(key)
+
+            elif day == 'thursday':
+                data = jsonData[1]
+
+                for key in data:
+                    if key == "date":
+                        pass
+                    else:
+                        lesson = self._translateTime(key) - 1
+                        if data[key]['code'] == 'cancelled':
+                            self.fill_secCol[lesson] = self.red
+                        elif data[key]['code'] == "irregular":
+                            self.fill_secCol[lesson] = self.purple
+                        elif data[key]['code'] == "none":
+                            self.fill_secCol[lesson] = self.orange
+                        else:
+                            print("Error at _updateTable")
+                #print(key)
+            else:
+                pass
+
+            # This Part is getting the Lesson Data from the sorted Data fetched from the WebUntis API
+            # and writing the Lesson Information to the plotly table
+            
+
+
+    def _translateTime(self, time):
+        if time == '735':
+            return 1
+        elif time == '820':
+            return 2
+        elif time == '930':
+            return 3
+        elif time == '1015':
+            return 4
+        elif time == '1120':
+            return 5
+        elif time == '1205':
+            return 6
+        elif time == '1300':
+            return 7
+        elif time == '1350':
+            return 8
+        elif time == '1435':
+            return 9
+        elif time == '1530':
+            return 10
+        elif time == '1615':
+            return 11
+        else:
+            print("Error")
+            return "Error"
 
     def _getRoom(self, roomId):
         room = str(self.s.rooms().filter(id=roomId)).replace("[", "").replace("]", "")
@@ -339,7 +441,7 @@ class untis():
         self._loadTemplate()
         self._loadCurrent()
         self._iterateTT(['wednsday', self.fetchedWednsday])
-        #self._refreshHeader()
-        #self._createTable()
-        #self.table.show()
-
+        self._updateTable('wednsday')
+        self._refreshHeader()
+        self._createTable()
+        self.table.show()
