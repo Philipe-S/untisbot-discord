@@ -33,8 +33,8 @@ class untis():
         # Data for the Output Timetable
         self.headerData = ['Stunde', 'Mittwoch', 'Donnerstag']
         self.cellsData  = [['1','2','3','4','5','6','7','8','9','10','11'], # 1st Column -> Lessons
-                            [], # Wednsday
-                            []] # Thursday
+                            ['1','2','3','4','5','6','7','8','9','10','11'], # Wednsday
+                            ['1','2','3','4','5','6','7','8','9','10','11']] # Thursday
         self.fill_firstCol = [self.darkOrange,
                             self.darkOrange,
                             self.darkOrange,
@@ -165,10 +165,10 @@ class untis():
             pass
         klasse = self.s.klassen().filter(id=1144)[0]
         self.wednsday = self.monday + datetime.timedelta(days=2)
-        self.thursday = self.monday + datetime.timedelta(days=3)
+        #self.thursday = self.monday + datetime.timedelta(days=3)
 
         #self.wednsday = datetime.date(2021, 11, 24)
-        #self.thursday = datetime.date(2021, 12, 16)
+        self.thursday = datetime.date(2021, 12, 16)
 
         wedTT = str(self.s.timetable(klasse=klasse, start=self.wednsday, end=self.wednsday))
         wedTT = wedTT.replace("'", "\"")
@@ -325,7 +325,8 @@ class untis():
         self.cells=dict(values=self.cellsData,
                                 line_color='darkslategray',
                                 fill_color=[self.fill_firstCol, self.fill_secCol, self.fill_thirCol],
-                                align='center',
+                                align=['center', 'center'],
+                                font=dict(color='darkslategray', size=13),
                                 height=45)
 
     def _createTable(self):
@@ -346,13 +347,15 @@ class untis():
 
             if day == 'wednsday':
                 data = jsonData[0]
+                #print(data)
 
                 for key in data:
                     if key == "date":
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
-                        print(lesson)
+                        lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
+
                         if data[key]['code'] == 'cancelled':
                             self.fill_secCol[lesson] = self.red
                         elif data[key]['code'] == "irregular":
@@ -363,6 +366,10 @@ class untis():
                             print("Error at _updateTable")
                     #print(key)
 
+                        # This Part is getting the Lesson Data from the sorted Data fetched from the WebUntis API
+                        # and writing the Lesson Information to the plotly table
+                        self.cellsData[1][lesson] = lessonInfo
+
             elif day == 'thursday':
                 data = jsonData[1]
 
@@ -371,6 +378,8 @@ class untis():
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
+                        lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
+
                         if data[key]['code'] == 'cancelled':
                             self.fill_secCol[lesson] = self.red
                         elif data[key]['code'] == "irregular":
@@ -383,9 +392,6 @@ class untis():
             else:
                 pass
 
-            # This Part is getting the Lesson Data from the sorted Data fetched from the WebUntis API
-            # and writing the Lesson Information to the plotly table
-            
 
 
     def _translateTime(self, time):
@@ -442,6 +448,9 @@ class untis():
         self._loadCurrent()
         self._iterateTT(['wednsday', self.fetchedWednsday])
         self._updateTable('wednsday')
+        self._iterateTT(['thursday', self.fetchedWednsday])
+        self._updateTable('thursday')
         self._refreshHeader()
         self._createTable()
+        self.table.update_layout(width=1000, height=950)
         self.table.show()
