@@ -157,6 +157,7 @@ class untis():
         except:
             print('Logout not complete')
 
+
     def _exportTT(self):
         try:
             os.remove('temp\\wedTimetable.json')
@@ -260,6 +261,7 @@ class untis():
             jsonData = json.load(ed)
 
             for key in iList[1].keys():
+                #print(iList[1][key])
                 #print(key)
                 # Get the Data to put in the export Table
                 #print(self.fetchedWednsday[key])
@@ -307,6 +309,7 @@ class untis():
 
                     elif iList[0] == 'thursday':
                         jsonData[1]["date"]    = int(str(self.thursday).replace("-", ""))
+                        #print(jsonData[1][key]["teacher"])
                         jsonData[1][key]["teacher"] = int(self.teacher)
                         jsonData[1][key]["code"]    = str(self.code)
                         jsonData[1][key]["subject"] = str(self.subject)
@@ -343,6 +346,7 @@ class untis():
         # 
         with open("templates\exportData.json", 'r') as ed:
             jsonData = json.load(ed)
+            print(jsonData)
 
 
             if day == 'wednsday':
@@ -372,6 +376,7 @@ class untis():
 
             elif day == 'thursday':
                 data = jsonData[1]
+                #print(data)
 
                 for key in data:
                     if key == "date":
@@ -381,11 +386,11 @@ class untis():
                         lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
 
                         if data[key]['code'] == 'cancelled':
-                            self.fill_secCol[lesson] = self.red
+                            self.fill_thirCol[lesson] = self.red
                         elif data[key]['code'] == "irregular":
-                            self.fill_secCol[lesson] = self.purple
+                            self.fill_thirCol[lesson] = self.purple
                         elif data[key]['code'] == "none":
-                            self.fill_secCol[lesson] = self.orange
+                            self.fill_thirCol[lesson] = self.orange
                         else:
                             print("Error at _updateTable")
                 #print(key)
