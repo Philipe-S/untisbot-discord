@@ -3,7 +3,6 @@ import webuntis
 import datetime
 import json
 import plotly.graph_objects as go
-from plotly.colors import n_colors
 
 
 class untis():
@@ -148,7 +147,7 @@ class untis():
             print('login successful')
         except:
             print('Login unsuccessful')
-
+            
     def logout(self):
         try:
             print('logging out...')
