@@ -81,32 +81,6 @@ class untis():
         today = datetime.date.today()
         self.monday  = today - datetime.timedelta(days=today.weekday())
         self.friday = self.monday + datetime.timedelta(days=4)
-        self.tempWednsday = {
-        '735':  {},
-        '820':  {},
-        '930':  {},
-        '1015': {},
-        '1120': {},
-        '1205': {},
-        '1300': {},
-        '1350': {},
-        '1435': {},
-        '1530': {},
-        '1615': {},
-        }
-        self.tempThursday = {
-        '735':  {},
-        '820':  {},
-        '930':  {},
-        '1015': {},
-        '1120': {},
-        '1205': {},
-        '1300': {},
-        '1350': {},
-        '1435': {},
-        '1530': {},
-        '1615': {},
-        }
         self.fetchedWednsday = {
         '735':  {},
         '820':  {},
@@ -156,6 +130,12 @@ class untis():
         except:
             print('Logout not complete')
 
+    def _clearFetched(self):
+        for key in self.fetchedWednsday.keys():
+            self.fetchedWednsday[key] = {}
+        for key in self.fetchedThursday.keys():
+            self.fetchedThursday[key] = {}
+
 
     def _exportTT(self):
         try:
@@ -198,31 +178,21 @@ class untis():
         #print(list2)
 
         fi2 = open('temp\\thurTimetable.json')
-        list2 = json.load(fi2)
+        list3 = json.load(fi2)
         fi2.close()
-        self._sortLessons('thursday', list2, False)
+        self._sortLessons('thursday', list3, False)
         #print(list2)
 
     def _processTable(self, day, time, data, temp):
-        if temp == True:
-            if day == 'wednsday':
-                self.tempWednsday[time] = data
-                #print(self.tempWednsday)
-            elif day == 'thursday':
-                self.tempThursday[time] = data
-                #print(self.tempThursday)
-            else:
-                print("ERROR at _processTable")
+        if day == 'wednsday':
+            self.fetchedWednsday[time] = data
+            #print(self.fetchedWednsday)
+        elif day == 'thursday':
+            self.fetchedThursday[time] = data
+            #print(self.fetchedThursday)
         else:
-            if day == 'wednsday':
-                self.fetchedWednsday[time] = data
-                #print(self.fetchedWednsday)
-            elif day == 'thursday':
-                self.fetchedThursday[time] = data
-                #print(self.fetchedThursday)
-            else:
-                print("ERROR at _processTable")
-                #pass
+            print("ERROR at _processTable")
+            #pass
 
     def _sortLessons(self, day, liste, temp):
         for i in liste:
@@ -252,23 +222,21 @@ class untis():
             else:
                 print("ERROR at _sortLessons")
                 pass
-        #print(self.tempWednsday)
 
     def _iterateTT(self, iList): # iList has to be this format: ['weekday', {*timetable data*}]
         # Will get properly soft-coded later --> Be able to use the bot with any schooldays
+
         with open("templates\exportData.json") as ed:
             jsonData = json.load(ed)
 
             for key in iList[1].keys():
-                #print(iList[1][key])
-                #print(key)
                 # Get the Data to put in the export Table
-                #print(self.fetchedWednsday[key])
                 try:
 
                     self.teacher     = iList[1][key][self.te][0]["id"]
                     self.subject     = self._getSubject(iList[1][key][self.su][0]["id"])
                     self.room        = self._getRoom(iList[1][key][self.ro][0]["id"])
+                    self.code        = ''
                 except:
                     #print(key + " empty")
                     pass
@@ -292,6 +260,7 @@ class untis():
                         jsonData[1][key]["code"]    = str(self.code)
                         jsonData[1][key]["subject"] = str(self.subject)
                         jsonData[1][key]["room"]    = str(self.room)
+                    self.code = 'none'
 
                 except:
                     #print(iList[1][key])
@@ -308,13 +277,15 @@ class untis():
 
                     elif iList[0] == 'thursday':
                         jsonData[1]["date"]    = int(str(self.thursday).replace("-", ""))
-                        #print(jsonData[1][key]["teacher"])
                         jsonData[1][key]["teacher"] = int(self.teacher)
                         jsonData[1][key]["code"]    = str(self.code)
                         jsonData[1][key]["subject"] = str(self.subject)
                         jsonData[1][key]["room"]    = str(self.room)
 
-            #print(jsonData)
+                self.teacher    = 1337
+                self.subject    = ""
+                self.room       = ""
+                #print(jsonData)
 
         with open("templates\exportData.json", 'w') as ed:
             json.dump(jsonData, ed)
@@ -345,7 +316,7 @@ class untis():
         # 
         with open("templates\exportData.json", 'r') as ed:
             jsonData = json.load(ed)
-            print(jsonData)
+            #print(jsonData)
 
 
             if day == 'wednsday':
@@ -357,7 +328,11 @@ class untis():
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
-                        lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
+                        self.fill_secCol[lesson] = self.orange
+                        if data[key]['teacher']  == 1337:
+                            lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + ""
+                        else:
+                            lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
 
                         if data[key]['code'] == 'cancelled':
                             self.fill_secCol[lesson] = self.red
@@ -368,30 +343,36 @@ class untis():
                         else:
                             print("Error at _updateTable")
                     #print(key)
-
                         # This Part is getting the Lesson Data from the sorted Data fetched from the WebUntis API
                         # and writing the Lesson Information to the plotly table
                         self.cellsData[1][lesson] = lessonInfo
 
             elif day == 'thursday':
                 data = jsonData[1]
-                #print(data)
+                #sprint(data)
 
                 for key in data:
+                    #print(data[key])
                     if key == "date":
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
-                        lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(data[key]['teacher'])
+                        self.fill_thirCol = self.orange
+                        if data[key]['teacher'] == 1337:
+                            lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + ""
+                        else:
+                            lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + str(
+                                data[key]['teacher'])
 
                         if data[key]['code'] == 'cancelled':
-                            self.fill_thirCol[lesson] = self.red
+                                self.fill_thirCol[lesson] = self.red
                         elif data[key]['code'] == "irregular":
                             self.fill_thirCol[lesson] = self.purple
                         elif data[key]['code'] == "none":
                             self.fill_thirCol[lesson] = self.orange
                         else:
                             print("Error at _updateTable")
+                        self.cellsData[2][lesson] = lessonInfo
                 #print(key)
             else:
                 pass
@@ -448,11 +429,10 @@ class untis():
         pass
     def debugFunc(self):
         self._exportTT()
-        self._loadTemplate()
         self._loadCurrent()
         self._iterateTT(['wednsday', self.fetchedWednsday])
         self._updateTable('wednsday')
-        self._iterateTT(['thursday', self.fetchedWednsday])
+        self._iterateTT(['thursday', self.fetchedThursday])
         self._updateTable('thursday')
         self._refreshHeader()
         self._createTable()
