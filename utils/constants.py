@@ -14,7 +14,7 @@ class ThemeData(object):
 
     @property
     def none_color(self) -> str:
-        return self._none_color
+        return str(self._none_color.color)
 
     @none_color.setter
     def none_color(self, value: Color):
@@ -26,7 +26,7 @@ class ThemeData(object):
 
     @property
     def irregular_color(self) -> str:
-        return self._irregular_color.color
+        return str(self._irregular_color.color)
 
     @irregular_color.setter
     def irregular_color(self, value: Color):
@@ -37,19 +37,19 @@ class ThemeData(object):
         del self._irregular_color
 
     @property
-    def canceled_color(self) -> str:
-        return self._canceled_color.color
+    def cancelled_color(self) -> str:
+        return str(self._cancelled_color.color)
 
-    @canceled_color.setter
-    def canceled_color(self, value: Color):
-        self._canceled_color = value
+    @cancelled_color.setter
+    def cancelled_color(self, value: Color):
+        self._cancelled_color = value
 
-    @canceled_color.deleter
-    def canceled_color(self):
-        del self._canceled_color
+    @cancelled_color.deleter
+    def cancelled_color(self):
+        del self._cancelled_color
 
-    def __init__(self, canceled_color: Color, irregular_color: Color, none_color: Color):
-        self._canceled_color = canceled_color
+    def __init__(self, cancelled_color: Color, irregular_color: Color, none_color: Color):
+        self._cancelled_color = cancelled_color
         self._irregular_color = irregular_color
         self._none_color = none_color
 

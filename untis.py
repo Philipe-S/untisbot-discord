@@ -24,17 +24,16 @@ class Untis():
         )
 
         self.themeData = ThemeData(
-            canceled_color=Color(251, 72, 72),
+            cancelled_color=Color(251, 72, 72),
             irregular_color=Color(189, 163, 199),
             none_color=Color(243, 184, 98)
         )
 
-        self.themeData.canceled_color(Color(0, 0, 0))
 
         # Background color for Outfile
-        self.red = 'rgb(251, 72, 72)'
-        self.purple = 'rgb(189, 163, 199)'
-        self.orange = 'rgb(243, 184, 98)'
+        self.red = self.themeData.cancelled_color
+        self.purple = self.themeData.irregular_color
+        self.orange = self.themeData.none_color
         self.darkOrange = 'rgb(199, 131, 32)'
 
         # For better understanding in usage
@@ -44,11 +43,15 @@ class Untis():
         self.ro = 'ro'
 
         # Data for the Output Timetable
-        self.headerData = HeaderData.__members__.items()
+        self.headerData = []
 
-        self.cellsData = [[map(range(1, 11, 1), self.to_string)],  # 1st Column -> Lessons
-                          [map(range(1, 11, 1), self.to_string)],  # Wednsday
-                          [map(range(1, 11, 1), self.to_string)]]  # Thursday
+        for item in HeaderData:
+            #print(item.value)
+            self.headerData.append(item.value)
+
+        self.cellsData = [['1','2','3','4','5','6','7','8','9','10','11'],  # 1st Column -> Lessons -- map(self.to_string ,range(1, 11, 1))
+                          ['1','2','3','4','5','6','7','8','9','10','11'],  # Wednsday
+                          ['1','2','3','4','5','6','7','8','9','10','11']]  # Thursday
         self.fill_firstCol = [self.darkOrange,
                               self.darkOrange,
                               self.darkOrange,
@@ -143,7 +146,11 @@ class Untis():
             print('Logout not complete')
 
 
-    def _clearFetched(self):
+    def _calculateLessons(self):
+        pass
+
+
+    def _clearData(self):
         for key in self.fetchedWednsday.keys():
             self.fetchedWednsday[key] = {}
         for key in self.fetchedThursday.keys():
@@ -157,10 +164,10 @@ class Untis():
             pass
         klasse = self.s.klassen().filter(id=1144)[0]
         self.wednsday = self.monday + datetime.timedelta(days=2)
-        # self.thursday = self.monday + datetime.timedelta(days=3)
+        self.thursday = self.monday + datetime.timedelta(days=3)
 
         # self.wednsday = datetime.date(2021, 11, 24)
-        self.thursday = datetime.date(2021, 12, 16)
+        #self.thursday = datetime.date(2021, 12, 16)
 
         wedTT = str(self.s.timetable(klasse=klasse, start=self.wednsday, end=self.wednsday))
         wedTT = wedTT.replace("'", "\"")
@@ -374,7 +381,7 @@ class Untis():
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
-                        self.fill_thirCol = self.orange
+                        self.fill_thirCol[lesson] = self.orange
                         if data[key]['teacher'] == 1337:
                             lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + ""
                         else:
