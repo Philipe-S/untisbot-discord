@@ -3,6 +3,7 @@ import webuntis
 import datetime
 import json
 import plotly.graph_objects as go
+import hashlib
 
 from utils.constants import ThemeData, Color
 from utils.enums import HeaderData
@@ -136,7 +137,7 @@ class Untis():
             print('login successful')
         except:
             print('Login unsuccessful')
-            
+
     def logout(self):
         try:
             print('logging out...')
@@ -149,14 +150,13 @@ class Untis():
     def _calculateLessons(self):
         pass
 
-
     def _clearData(self):
         for key in self.fetchedWednsday.keys():
             self.fetchedWednsday[key] = {}
         for key in self.fetchedThursday.keys():
             self.fetchedThursday[key] = {}
 
-    def _exportt(self):
+    def _exportTimetable(self):
         try:
             os.remove('temp\\wedTimetable.json')
             os.remove('temp\\thurTimetable.json')
@@ -212,7 +212,6 @@ class Untis():
         else:
             print("ERROR at _processTable")
 
-
     def _sortLessons(self, day, liste, temp):
         for i in liste:
             time = str(i['startTime'])
@@ -242,11 +241,15 @@ class Untis():
                 print("ERROR at _sortLessons")
                 pass
 
-    def _iterateTT(self, iList):  # iList has to be this format: ['weekday', {*timetable data*}]
+    def _iterateTT(self, iList, ret):  # iList has to be this format: ['weekday', {*timetable data*}]
         # Will get properly soft-coded later --> Be able to use the bot with any schooldays
 
-        with open("templates\exportData.json") as ed:
-            jsonData = json.load(ed)
+        if ret == True:
+            with open("templates\last_import_data.json") as last:
+                jsonData = json.load(last)
+        else:
+            with open("templates\exportData.json") as ed:
+                jsonData = json.load(ed)
 
             for key in iList[1].keys():
 
@@ -310,9 +313,12 @@ class Untis():
                 self.room       = ""
                 #print(jsonData)
 
-
-        with open("templates\exportData.json", 'w') as ed:
-            json.dump(jsonData, ed)
+        if ret == True:
+            with open("templates\last_import_data.json", "w") as last:
+                json.dump(jsonData, last)
+        else:
+            with open("templates\exportData.json", 'w') as ed:
+                json.dump(jsonData, ed)
 
     def _refreshHeader(self):
         self.header = dict(values=self.headerData,
@@ -401,6 +407,7 @@ class Untis():
             else:
                 pass
 
+    # Used to index the lessons by numbers, not by time. WebUntis API is only giving the start / end times so this function is necessary
     def _translateTime(self, time):
         if time == '735':
             return 1
@@ -428,6 +435,27 @@ class Untis():
             print("Error")
             return "Error"
 
+    def _hashTimetable(self, inputString):
+        hash = hashlib.sha256(str.encode(inputString)).hexdigest()
+        return hash
+
+    # This function will return either "True" if changes have been detected or "False" if no changes were found.
+    def _findChanges(self):
+        self._exportTimetable()
+        self._loadCurrent()
+        self._iterateTT(['wednsday', self.fetchedWednsday], True)
+        self._iterateTT(['thursday', self.fetchedThursday], True)
+        with open("templates\last_import_data.json", "r") as file:
+            newHash = self._hashTimetable(str(json.load(file)))
+        with open("templates\exportData.json", "r") as file2:
+            oldHash = self._hashTimetable(str(json.load(file2)))
+
+        if oldHash != newHash:
+            return True
+        else:
+            return False
+
+
     def _getRoom(self, roomId):
         room = str(self.s.rooms().filter(id=roomId)).replace("[", "").replace("]", "")
         # print(room)
@@ -442,21 +470,37 @@ class Untis():
         pass
 
     def _getLastUpdate(self):
-        stamp = self.s.last_import_time()
-        date = datetime.datetime.fromtimestamp(stamp / 1000)
-        print(date)
+        hash = hashlib.sha256(str.encode(str(self.s.last_import_time().date))).hexdigest()
+        #print(hash)
+        with open("templates\\last_import_time.txt", "w") as file:
+            file.write(str(hash))
+
+    def _compareUpdateTimes(self):
+        with open("templates\\last_import_time.txt", "r") as file:
+            hash = file.read()
+            newHash = hashlib.sha256(str.encode(str(self.s.last_import_time().date))).hexdigest()
+
+            if hash == newHash:
+                # Returns "false" if hash did not change
+                return "false"
+            else:
+                # Returns "true" if hash changed, will set the new update time aswell
+                self._getLastUpdate()
+                return "true"
 
     def getSubject(self):
         pass
 
     def debugFunc(self):
-        self._exportt()
+        self._getLastUpdate()
+        self._exportTimetable()
         self._loadCurrent()
-        self._iterateTT(['wednsday', self.fetchedWednsday])
+        self._iterateTT(['wednsday', self.fetchedWednsday], False)
         self._updateTable('wednsday')
-        self._iterateTT(['thursday', self.fetchedThursday])
+        self._iterateTT(['thursday', self.fetchedThursday], False)
         self._updateTable('thursday')
         self._refreshHeader()
         self._createTable()
+        print(self._findChanges())
         self.table.update_layout(width=1000, height=950)
-        self.table.show()
+        #self.table.show()
