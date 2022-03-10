@@ -4,13 +4,14 @@ attrs==21.4.0
 certifi==2021.10.8
 chardet==4.0.0
 charset-normalizer==2.0.10
+discord.py==1.7.3
 idna==3.3
 multidict==5.2.0
 plotly==5.4.0
-py-cord==1.7.3
 requests==2.27.1
 six==1.16.0
 tenacity==8.0.1
+timeloop==1.0.2
 typing_extensions==4.0.1
 urllib3==1.26.7
 webuntis==0.1.12
