@@ -6,6 +6,7 @@ chardet==4.0.0
 charset-normalizer==2.0.10
 discord.py==1.7.3
 idna==3.3
+kaleido==0.2.1
 multidict==5.2.0
 plotly==5.4.0
 requests==2.27.1
