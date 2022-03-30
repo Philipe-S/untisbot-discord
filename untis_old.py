@@ -1,4 +1,6 @@
 import os
+
+import plotly.io.kaleido
 import webuntis
 import datetime
 import json
@@ -37,11 +39,11 @@ class Untis():
         self.orange = self.themeData.none_color
         self.darkOrange = 'rgb(199, 131, 32)'
 
-        # For better understanding in usage
-        self.te = 'te'
-        self.kl = 'kl'
-        self.su = 'su'
-        self.ro = 'ro'
+
+        self.layout = go.Layout(
+            #width=900,
+            #height=800,
+        )
 
         # Data for the Output Timetable
         self.headerData = []
@@ -129,6 +131,10 @@ class Untis():
         }
 
     # ---- Initial Setup end ----
+
+
+
+
 
     def login(self):
         try:
@@ -259,9 +265,9 @@ class Untis():
                 # print(self.fetchedWednsday[key])
                 try:
 
-                    self.teacher = iList[1][key][self.te][0]["id"]
-                    self.subject = self._getSubject(iList[1][key][self.su][0]["id"])
-                    self.room = self._getRoom(iList[1][key][self.ro][0]["id"])
+                    self.teacher = iList[1][key]["te"][0]["id"]
+                    self.subject = self._getSubject(iList[1][key]["su"][0]["id"])
+                    self.room = self._getRoom(iList[1][key]["ro"][0]["id"])
                     self.code        = ''
                 except:
                     # print(key + " empty")
@@ -324,22 +330,23 @@ class Untis():
         self.header = dict(values=self.headerData,
                            line_color='darkslategray',
                            fill_color=self.darkOrange,
-                           align='center')
+                           align='center',
+                           font=dict(color='black', size=16))
         self.cells = dict(values=self.cellsData,
                           line_color='darkslategray',
                           fill_color=[self.fill_firstCol, self.fill_secCol, self.fill_thirCol],
                           align=['center', 'center'],
-                          font=dict(color='darkslategray', size=13),
-                          height=45)
+                          font=dict(color='black', size=14),
+                          height=55)
 
     def _createTable(self):
         self.table = go.Figure(data=[go.Table(
             columnorder=[1, 2, 3],
-            columnwidth=[10, 45, 45],
+            #columnwidth=[2, 10, 10],
 
             header=self.header,
             cells=self.cells
-        )])
+        )], layout=self.layout)
 
     def _updateTable(self, day):
         # This part is going through the sorted Data from the WebUntis API and changing the table colors
@@ -440,7 +447,7 @@ class Untis():
         return hash
 
     # This function will return either "True" if changes have been detected or "False" if no changes were found.
-    def _findChanges(self):
+    def findChanges(self):
         self._exportTimetable()
         self._loadCurrent()
         self._iterateTT(['wednsday', self.fetchedWednsday], True)
@@ -455,6 +462,9 @@ class Untis():
         else:
             return False
 
+    def _exportImage(self):
+        plotly.io.kaleido.scope.default_scale = "1"
+        self.table.write_image("images\\timetable.png")
 
     def _getRoom(self, roomId):
         room = str(self.s.rooms().filter(id=roomId)).replace("[", "").replace("]", "")
@@ -488,8 +498,6 @@ class Untis():
                 self._getLastUpdate()
                 return "true"
 
-    def getSubject(self):
-        pass
 
     def debugFunc(self):
         self._getLastUpdate()
@@ -501,6 +509,6 @@ class Untis():
         self._updateTable('thursday')
         self._refreshHeader()
         self._createTable()
-        print(self._findChanges())
-        self.table.update_layout(width=1000, height=950)
-        #self.table.show()
+        print(self.findChanges())
+        self._exportImage()
+        self.table.show()
