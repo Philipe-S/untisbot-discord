@@ -1,8 +1,11 @@
 import os
+
+import plotly.io.kaleido
 import webuntis
 import datetime
 import json
 import plotly.graph_objects as go
+import hashlib
 
 from utils.constants import ThemeData, Color
 from utils.enums import HeaderData
@@ -24,31 +27,34 @@ class Untis():
         )
 
         self.themeData = ThemeData(
-            canceled_color=Color(251, 72, 72),
+            cancelled_color=Color(251, 72, 72),
             irregular_color=Color(189, 163, 199),
             none_color=Color(243, 184, 98)
         )
 
-        self.themeData.canceled_color(Color(0, 0, 0))
 
         # Background color for Outfile
-        self.red = 'rgb(251, 72, 72)'
-        self.purple = 'rgb(189, 163, 199)'
-        self.orange = 'rgb(243, 184, 98)'
+        self.red = self.themeData.cancelled_color
+        self.purple = self.themeData.irregular_color
+        self.orange = self.themeData.none_color
         self.darkOrange = 'rgb(199, 131, 32)'
 
-        # For better understanding in usage
-        self.te = 'te'
-        self.kl = 'kl'
-        self.su = 'su'
-        self.ro = 'ro'
+
+        self.layout = go.Layout(
+            #width=900,
+            #height=800,
+        )
 
         # Data for the Output Timetable
-        self.headerData = HeaderData.__members__.items()
+        self.headerData = []
 
-        self.cellsData = [[map(range(1, 11, 1), self.to_string)],  # 1st Column -> Lessons
-                          [map(range(1, 11, 1), self.to_string)],  # Wednsday
-                          [map(range(1, 11, 1), self.to_string)]]  # Thursday
+        for item in HeaderData:
+            #print(item.value)
+            self.headerData.append(item.value)
+
+        self.cellsData = [['1','2','3','4','5','6','7','8','9','10','11'],  # 1st Column -> Lessons -- map(self.to_string ,range(1, 11, 1))
+                          ['1','2','3','4','5','6','7','8','9','10','11'],  # Wednsday
+                          ['1','2','3','4','5','6','7','8','9','10','11']]  # Thursday
         self.fill_firstCol = [self.darkOrange,
                               self.darkOrange,
                               self.darkOrange,
@@ -126,6 +132,10 @@ class Untis():
 
     # ---- Initial Setup end ----
 
+
+
+
+
     def login(self):
         try:
             print('Attemting login...')
@@ -133,7 +143,7 @@ class Untis():
             print('login successful')
         except:
             print('Login unsuccessful')
-            
+
     def logout(self):
         try:
             print('logging out...')
@@ -143,13 +153,16 @@ class Untis():
             print('Logout not complete')
 
 
-    def _clearFetched(self):
+    def _calculateLessons(self):
+        pass
+
+    def _clearData(self):
         for key in self.fetchedWednsday.keys():
             self.fetchedWednsday[key] = {}
         for key in self.fetchedThursday.keys():
             self.fetchedThursday[key] = {}
 
-    def _exportt(self):
+    def _exportTimetable(self):
         try:
             os.remove('temp\\wedTimetable.json')
             os.remove('temp\\thurTimetable.json')
@@ -157,10 +170,10 @@ class Untis():
             pass
         klasse = self.s.klassen().filter(id=1144)[0]
         self.wednsday = self.monday + datetime.timedelta(days=2)
-        # self.thursday = self.monday + datetime.timedelta(days=3)
+        self.thursday = self.monday + datetime.timedelta(days=3)
 
         # self.wednsday = datetime.date(2021, 11, 24)
-        self.thursday = datetime.date(2021, 12, 16)
+        #self.thursday = datetime.date(2021, 12, 16)
 
         wedTT = str(self.s.timetable(klasse=klasse, start=self.wednsday, end=self.wednsday))
         wedTT = wedTT.replace("'", "\"")
@@ -205,7 +218,6 @@ class Untis():
         else:
             print("ERROR at _processTable")
 
-
     def _sortLessons(self, day, liste, temp):
         for i in liste:
             time = str(i['startTime'])
@@ -235,11 +247,15 @@ class Untis():
                 print("ERROR at _sortLessons")
                 pass
 
-    def _iterateTT(self, iList):  # iList has to be this format: ['weekday', {*timetable data*}]
+    def _iterateTT(self, iList, ret):  # iList has to be this format: ['weekday', {*timetable data*}]
         # Will get properly soft-coded later --> Be able to use the bot with any schooldays
 
-        with open("templates\exportData.json") as ed:
-            jsonData = json.load(ed)
+        if ret == True:
+            with open("templates\last_import_data.json") as last:
+                jsonData = json.load(last)
+        else:
+            with open("templates\exportData.json") as ed:
+                jsonData = json.load(ed)
 
             for key in iList[1].keys():
 
@@ -249,9 +265,9 @@ class Untis():
                 # print(self.fetchedWednsday[key])
                 try:
 
-                    self.teacher = iList[1][key][self.te][0]["id"]
-                    self.subject = self._getSubject(iList[1][key][self.su][0]["id"])
-                    self.room = self._getRoom(iList[1][key][self.ro][0]["id"])
+                    self.teacher = iList[1][key]["te"][0]["id"]
+                    self.subject = self._getSubject(iList[1][key]["su"][0]["id"])
+                    self.room = self._getRoom(iList[1][key]["ro"][0]["id"])
                     self.code        = ''
                 except:
                     # print(key + " empty")
@@ -303,30 +319,34 @@ class Untis():
                 self.room       = ""
                 #print(jsonData)
 
-
-        with open("templates\exportData.json", 'w') as ed:
-            json.dump(jsonData, ed)
+        if ret == True:
+            with open("templates\last_import_data.json", "w") as last:
+                json.dump(jsonData, last)
+        else:
+            with open("templates\exportData.json", 'w') as ed:
+                json.dump(jsonData, ed)
 
     def _refreshHeader(self):
         self.header = dict(values=self.headerData,
                            line_color='darkslategray',
                            fill_color=self.darkOrange,
-                           align='center')
+                           align='center',
+                           font=dict(color='black', size=16))
         self.cells = dict(values=self.cellsData,
                           line_color='darkslategray',
                           fill_color=[self.fill_firstCol, self.fill_secCol, self.fill_thirCol],
                           align=['center', 'center'],
-                          font=dict(color='darkslategray', size=13),
-                          height=45)
+                          font=dict(color='black', size=14),
+                          height=55)
 
     def _createTable(self):
         self.table = go.Figure(data=[go.Table(
             columnorder=[1, 2, 3],
-            columnwidth=[10, 45, 45],
+            #columnwidth=[2, 10, 10],
 
             header=self.header,
             cells=self.cells
-        )])
+        )], layout=self.layout)
 
     def _updateTable(self, day):
         # This part is going through the sorted Data from the WebUntis API and changing the table colors
@@ -374,7 +394,7 @@ class Untis():
                         pass
                     else:
                         lesson = self._translateTime(key) - 1
-                        self.fill_thirCol = self.orange
+                        self.fill_thirCol[lesson] = self.orange
                         if data[key]['teacher'] == 1337:
                             lessonInfo = str(data[key]['subject']) + "<br>" + str(data[key]['room']) + "<br>" + ""
                         else:
@@ -394,6 +414,7 @@ class Untis():
             else:
                 pass
 
+    # Used to index the lessons by numbers, not by time. WebUntis API is only giving the start / end times so this function is necessary
     def _translateTime(self, time):
         if time == '735':
             return 1
@@ -421,6 +442,30 @@ class Untis():
             print("Error")
             return "Error"
 
+    def _hashTimetable(self, inputString):
+        hash = hashlib.sha256(str.encode(inputString)).hexdigest()
+        return hash
+
+    # This function will return either "True" if changes have been detected or "False" if no changes were found.
+    def findChanges(self):
+        self._exportTimetable()
+        self._loadCurrent()
+        self._iterateTT(['wednsday', self.fetchedWednsday], True)
+        self._iterateTT(['thursday', self.fetchedThursday], True)
+        with open("templates\last_import_data.json", "r") as file:
+            newHash = self._hashTimetable(str(json.load(file)))
+        with open("templates\exportData.json", "r") as file2:
+            oldHash = self._hashTimetable(str(json.load(file2)))
+
+        if oldHash != newHash:
+            return True
+        else:
+            return False
+
+    def _exportImage(self):
+        plotly.io.kaleido.scope.default_scale = "1"
+        self.table.write_image("images\\timetable.png")
+
     def _getRoom(self, roomId):
         room = str(self.s.rooms().filter(id=roomId)).replace("[", "").replace("]", "")
         # print(room)
@@ -435,21 +480,35 @@ class Untis():
         pass
 
     def _getLastUpdate(self):
-        stamp = self.s.last_import_time()
-        date = datetime.datetime.fromtimestamp(stamp / 1000)
-        print(date)
+        hash = hashlib.sha256(str.encode(str(self.s.last_import_time().date))).hexdigest()
+        #print(hash)
+        with open("templates\\last_import_time.txt", "w") as file:
+            file.write(str(hash))
 
-    def getSubject(self):
-        pass
+    def _compareUpdateTimes(self):
+        with open("templates\\last_import_time.txt", "r") as file:
+            hash = file.read()
+            newHash = hashlib.sha256(str.encode(str(self.s.last_import_time().date))).hexdigest()
+
+            if hash == newHash:
+                # Returns "false" if hash did not change
+                return "false"
+            else:
+                # Returns "true" if hash changed, will set the new update time aswell
+                self._getLastUpdate()
+                return "true"
+
 
     def debugFunc(self):
-        self._exportt()
+        self._getLastUpdate()
+        self._exportTimetable()
         self._loadCurrent()
-        self._iterateTT(['wednsday', self.fetchedWednsday])
+        self._iterateTT(['wednsday', self.fetchedWednsday], False)
         self._updateTable('wednsday')
-        self._iterateTT(['thursday', self.fetchedThursday])
+        self._iterateTT(['thursday', self.fetchedThursday], False)
         self._updateTable('thursday')
         self._refreshHeader()
         self._createTable()
-        self.table.update_layout(width=1000, height=950)
+        print(self.findChanges())
+        self._exportImage()
         self.table.show()

@@ -1,15 +1,4 @@
-class Color(object):
-
-    @property
-    def color(self):
-        return f'rgb({self._red},{self._green},{self._blue})'
-
-    def __init__(self, red: int, green: int, blue: int):
-        self._red = red
-        self._green = green
-        self._blue = blue
-
-
+from api.models.color import Color
 class ThemeData(object):
 
     @property
@@ -23,6 +12,18 @@ class ThemeData(object):
     @none_color.deleter
     def none_color(self):
         del self._none_color
+
+    @property
+    def first_column_color(self) -> str:
+        return str(self._first_column_color.color)
+
+    @first_column_color.setter
+    def first_column_color(self, value: Color):
+        self._first_column_color = value
+
+    @first_column_color.deleter
+    def first_column_color(self):
+        del self._first_column_color
 
     @property
     def irregular_color(self) -> str:
@@ -48,10 +49,8 @@ class ThemeData(object):
     def cancelled_color(self):
         del self._cancelled_color
 
-    def __init__(self, cancelled_color: Color, irregular_color: Color, none_color: Color):
+    def __init__(self, cancelled_color: Color, irregular_color: Color, none_color: Color, first_column_color: Color):
         self._cancelled_color = cancelled_color
         self._irregular_color = irregular_color
         self._none_color = none_color
-
-
-
+        self._first_column_color = first_column_color
